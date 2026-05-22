@@ -1,7 +1,7 @@
 name: publish-image
 
-# Builds this workspace template's Dockerfile and pushes it to GHCR as
-# `ghcr.io/molecule-ai/workspace-template-<runtime>:latest` + `:sha-<7>`.
+# Builds this workspace template's Dockerfile and pushes it to ECR as
+# `<ECR_REGISTRY>/molecule-ai/workspace-template-<runtime>:latest` + `:sha-<7>`.
 # The heavy lifting lives in the reusable workflow in molecule-ci.
 
 on:
@@ -52,7 +52,7 @@ jobs:
 
   publish:
     needs: resolve-version
-    uses: Molecule-AI/molecule-ci/.github/workflows/publish-template-image.yml@main
+    uses: molecule-ai/molecule-ci/.gitea/workflows/publish-template-image.yml@main
     secrets: inherit
     with:
       # Cascade fires with client_payload.runtime_version = the exact
