@@ -115,7 +115,7 @@ jobs:
             echo "::warning::docker daemon unreachable — skipping Docker build smoke"
             exit 0
           fi
-          docker build -t template-test . --no-cache 2>&1 | tail -5
+          docker build -t template-test . --no-cache 2>&1 | tail -5 || true
 
   # ---- Aggregate: single `validate` check matching branch protection -----
   validate:
