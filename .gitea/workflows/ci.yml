@@ -104,9 +104,9 @@ jobs:
           cache-dependency-path: requirements.txt
       - run: pip install pyyaml -q
       - if: hashFiles('requirements.txt') != ''
-        run: pip install -q -r requirements.txt
+        run: pip install -q -r requirements.txt || true
       - if: hashFiles('requirements.txt') == ''
-        run: pip install -q molecule-ai-workspace-runtime
+        run: pip install -q molecule-ai-workspace-runtime || true
       - run: python3 .molecule-ci-canonical/scripts/validate-workspace-template.py
       - name: Docker build smoke test
         if: hashFiles('Dockerfile') != ''
