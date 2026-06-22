@@ -146,11 +146,26 @@ jobs:
           echo "::notice::no bare imports of runtime modules in *.py files"
 
       - name: Log in to ECR
+        # Secret-name resilience: this repo historically referenced ONLY
+        # secrets.MOLECULE_AWS_* — which were NEVER configured here, so every
+        # publish run since the 2026-06-10 inline migration failed at this step
+        # with an empty key piped into `docker login --password-stdin`, which
+        # then fell back to an interactive prompt and died with
+        # "Cannot perform an interactive login from a non TTY device".
+        # The sibling templates split across two naming conventions:
+        # claude-code/hermes/codex use AWS_* and langgraph/autogen use
+        # MOLECULE_AWS_*. Reference BOTH (MOLECULE_AWS_* first, then AWS_*) so
+        # whichever the org/repo has populated wins, and fail LOUD with a clear
+        # message — never the cryptic non-TTY error — if neither is set.
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
+          if [ -z "${AWS_ACCESS_KEY_ID:-}" ] || [ -z "${AWS_SECRET_ACCESS_KEY:-}" ]; then
+            echo "::error::No AWS credentials available — set MOLECULE_AWS_ACCESS_KEY_ID/MOLECULE_AWS_SECRET_ACCESS_KEY (or AWS_ACCESS_KEY_ID/AWS_SECRET_ACCESS_KEY) as Actions secrets on this repo or the org. Without them ECR login cannot proceed."
+            exit 1
+          fi
           aws ecr get-login-password --region us-east-2 | \
             docker login --username AWS --password-stdin "${ECR_REGISTRY}"
 
@@ -168,8 +183,8 @@ jobs:
 
       - name: Ensure ECR repository exists
         env:
-          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
         run: |
           set -euo pipefail
           repo_path="${IMAGE_NAME#*/}"
@@ -253,8 +268,8 @@ jobs:
       - name: Ensure ECR lifecycle policy
         env:
           IMAGE_NAME: ${{ env.IMAGE_NAME }}
-          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.MOLECULE_AWS_ACCESS_KEY_ID || secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.MOLECULE_AWS_SECRET_ACCESS_KEY || secrets.AWS_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: us-east-2
         run: |
           set -uo pipefail
