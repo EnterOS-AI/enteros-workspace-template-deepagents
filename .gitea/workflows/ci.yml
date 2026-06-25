@@ -88,7 +88,6 @@ jobs:
 
   # ---- Inlined from molecule-ci canonical ----
   validate-runtime:
-    if: false  # disabled: pip-index gap — re-enable once molecule-ai-workspace-runtime is in private PyPI
     name: Template validation (runtime)
     runs-on: ubuntu-latest
     timeout-minutes: 15
