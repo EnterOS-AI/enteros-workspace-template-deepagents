@@ -15,7 +15,7 @@ WORKDIR /app
 ARG RUNTIME_VERSION=
 
 # Gitea PyPI registry is the PRIMARY internal index (RFC internal#596; CTO GO
-# 2026-05-19). It serves the private molecule-ai-workspace-runtime wheel,
+# 2026-05-19). It serves the private molecules-workspace-runtime wheel,
 # including versions that are Gitea-only (e.g. 0.2.x / 0.3.x). Anonymous reads
 # work because molecule-ai is a public org -- no auth wired into the build.
 # pypi.org stays as the extra index for transitive deps that are PyPI-only.
@@ -33,7 +33,7 @@ RUN pip install --no-cache-dir \
       pip install --no-cache-dir --upgrade \
         --index-url "${PIP_INDEX_URL}" \
         --extra-index-url "${PIP_EXTRA_INDEX_URL}" \
-        "molecule-ai-workspace-runtime==${RUNTIME_VERSION}"; \
+        "molecules-workspace-runtime==${RUNTIME_VERSION}"; \
     fi
 
 COPY adapter.py .
